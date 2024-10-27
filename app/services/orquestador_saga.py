@@ -103,22 +103,26 @@ def egresar_stock(**kwargs):
 
 """ Acciones compensatorias """
 
-def eliminar_pago(**kwargs):
-    """
-    Acción compensatoria encargada de eliminar el registro de pago en base a su id.
-    """
-    ms_pagos = MsPagos()
-    ms_pagos.eliminar_pago(kwargs['pago_id'])
-    print(f"Pago id={kwargs['pago_id']} eliminado")
+def nada(**kwargs):
+    pass
+
 
 def eliminar_compra(**kwargs):
     """
     Acción compensatoria encargada de eliminar el registro de compra en base a su id.
     """
     ms_compras = MsCompras()
-    ms_compras.eliminar_compra(kwargs['compra_id'])
-    print(f"Compra id={kwargs['compra_id']} eliminada")
+    observaciones = 'Motivo de eliminacion: Insuficiente stock o microservicios de Pagos y/o Inventario han fallado.'
+    ms_compras.eliminar_compra(kwargs['compra_id'], observaciones)
 
+
+def eliminar_pago(**kwargs):
+    """
+    Acción compensatoria encargada de eliminar el registro de pago en base a su id.
+    """
+    ms_pagos = MsPagos()
+    observaciones = 'Motivo de eliminacion: Insuficiente stock o microservicio de Inventario ha fallado.'
+    ms_pagos.eliminar_pago(kwargs['pago_id'], observaciones)
 
 class OrquestadorSaga:
     """ 
@@ -135,21 +139,17 @@ class OrquestadorSaga:
             SagaBuilder \
                 .create() \
                 .action(lambda: verificar_existencia_producto(producto_id, cantidad, fecha_compra, medio_pago, direccion), 
-                        lambda: None) \
-                .action(registrar_compra, lambda: None) \
+                        lambda: nada()) \
+                .action(registrar_compra, nada) \
                 .action(registrar_pago, eliminar_compra) \
                 .action(verificar_stock, eliminar_pago) \
-                .action(egresar_stock, lambda: None) \
+                .action(egresar_stock, nada) \
                 .build().execute()
             exito = not exito
 
         except SagaError as error:
-            print(error)
-        
+            for e in error.args:
+                print(e)
+
         return exito
-
-        
-
-
-
-
+    

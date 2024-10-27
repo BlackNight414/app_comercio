@@ -6,7 +6,7 @@ from app.config import config
 from pdchaos.middleware.contrib.flask.flask_middleware import FlaskMiddleware
 
 # ma = Marshmallow()
-middleware = FlaskMiddleware()
+#middleware = FlaskMiddleware()
 
 def create_app():
     app_context = os.getenv('FLASK_CONTEXT')
@@ -14,9 +14,9 @@ def create_app():
     f = config.factory(app_context if app_context else 'development')
     app.config.from_object(f)
     
-    app.config['CHAOS_MIDDLEWARE_APPLICATION_NAME'] = 'catalogo' # microservicio 
-    app.config['CHAOS_MIDDLEWARE_APPLICATION_ENV'] = 'development' 
-    middleware.init_app(app)
+    #app.config['CHAOS_MIDDLEWARE_APPLICATION_NAME'] = 'catalogo' # microservicio 
+    #app.config['CHAOS_MIDDLEWARE_APPLICATION_ENV'] = 'development' 
+    #middleware.init_app(app)
 
     # ma.init_app(app)
 
