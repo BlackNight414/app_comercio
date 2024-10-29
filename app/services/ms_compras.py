@@ -11,10 +11,9 @@ class MsCompras:
     __URL_MS = os.getenv('URL_MS_COMPRAS') # Busca la URL en variables de entorno
 
     @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3), retry_error_callback=ms_sin_respuesta)
-    def registrar_compra(self, producto_id: int, fecha_compra: date, direccion: str):
+    def registrar_compra(self, producto_id: int, direccion: str):
         data = {
             'producto_id': producto_id,
-            'fecha_compra': fecha_compra.isoformat(),
             'direccion_envio': direccion}
         resp = requests.post(f'{self.__URL_MS}/registrar_compra', json=data)
         return resp

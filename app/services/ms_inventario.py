@@ -10,10 +10,9 @@ class MsInventario:
     __URL_MS = os.getenv('URL_MS_INVENTARIO')
 
     @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3), retry_error_callback=ms_sin_respuesta)
-    def egresar_producto(self, producto_id: int, fecha: date, cantidad: float):
+    def egresar_producto(self, producto_id: int, cantidad: float):
         datos_stock = {
             'producto_id': producto_id,
-            'fecha_transaccion': fecha.isoformat(),
             'cantidad': cantidad
         }
         resp = requests.post(f'{self.__URL_MS}/egresar_producto', json=datos_stock)

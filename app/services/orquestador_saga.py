@@ -4,7 +4,7 @@ from datetime import date
 
 """ Acciones """
 
-def verificar_existencia_producto(producto_id: int, cantidad: int, fecha_compra: date, medio_pago: str , direccion: str):
+def verificar_existencia_producto(producto_id: int, cantidad: int, medio_pago: str , direccion: str):
     """  
     Primera acción del orquetador del proceso de compra de un producto
     (Utiliza el microservicio Catalogo). \n
@@ -26,7 +26,6 @@ def verificar_existencia_producto(producto_id: int, cantidad: int, fecha_compra:
             'producto_id': producto_id,
             'precio': datos_producto['precio'], # LLevamos el precio del producto para calcular el pago posteriormente
             'cantidad': cantidad,
-            'fecha_compra': fecha_compra,
             'medio_pago': medio_pago,
             'direccion': direccion
         }
@@ -39,7 +38,7 @@ def registrar_compra(**kwargs):
     (Utiliza el microservicio Compra). 
     """
     ms_compras = MsCompras()
-    resp = ms_compras.registrar_compra(kwargs['producto_id'], kwargs['fecha_compra'], kwargs['direccion'])
+    resp = ms_compras.registrar_compra(kwargs['producto_id'], kwargs['direccion'])
     if resp.status_code == 200:
         datos_compra = resp.json()
         precio_pago = kwargs['cantidad'] * float(kwargs['precio']) # calculamos el pago total
@@ -95,7 +94,7 @@ def egresar_stock(**kwargs):
     """
     ms_inventario = MsInventario()
     # Actualizamos inventario con un registro de salida
-    resp = ms_inventario.egresar_producto(kwargs['producto_id'], kwargs['fecha_compra'], kwargs['cantidad'])
+    resp = ms_inventario.egresar_producto(kwargs['producto_id'], kwargs['cantidad'])
     if resp.status_code == 200:
         return {'msg': '¡PROCESO DE COMPRA COMPLETADO!'} # retornamos un mensaje de exito (sí o sí un diccionario)
     else:
@@ -104,6 +103,7 @@ def egresar_stock(**kwargs):
 """ Acciones compensatorias """
 
 def nada(**kwargs):
+    """ Función vacía para cuando no se requiera una compensación en una acción """
     pass
 
 
@@ -130,7 +130,7 @@ class OrquestadorSaga:
     Utiliza la libería saga
     """
 
-    def proceso_compra(self , producto_id: int, cantidad: int, fecha_compra: date, medio_pago: str , direccion: str):
+    def proceso_compra(self , producto_id: int, cantidad: int, medio_pago: str , direccion: str):
         """
         Método en el que se orquesta el proceso de compre de un producto
         """
@@ -138,7 +138,7 @@ class OrquestadorSaga:
         try:
             SagaBuilder \
                 .create() \
-                .action(lambda: verificar_existencia_producto(producto_id, cantidad, fecha_compra, medio_pago, direccion), 
+                .action(lambda: verificar_existencia_producto(producto_id, cantidad, medio_pago, direccion), 
                         lambda: nada()) \
                 .action(registrar_compra, nada) \
                 .action(registrar_pago, eliminar_compra) \

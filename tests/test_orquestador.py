@@ -16,11 +16,10 @@ class TestProcesoCompraSaga(unittest.TestCase):
         # datos
         producto_id = 1
         cantidad = 1
-        fecha_compra = date.fromisoformat('2024-10-27')
         medio_pago = 'debito'
         direccion = 'Calle Falsa 123'
 
-        exito = orquestador.proceso_compra(producto_id, cantidad, fecha_compra, medio_pago, direccion)
+        exito = orquestador.proceso_compra(producto_id, cantidad, medio_pago, direccion)
         self.assertTrue(exito, 'Un proseco del Orquestador ha fallado')
 
 
