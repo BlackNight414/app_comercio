@@ -16,10 +16,16 @@ class MsPagos:
             'medio_pago': medio_pago
         }
         resp = requests.post(f'{self.__URL_MS}/registrar_pago', json=data)
-        return resp
+        if resp.status_code == 200:
+            return resp.json()
+        else:
+            raise Exception('Microservicio Pagos ha fallado.')
     
     @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3))
     def eliminar_pago(self, pago_id: int, observaciones: str):
         datos_observaciones = {'observaciones': observaciones}
         resp = requests.delete(f'{self.__URL_MS}/eliminar_pago/{pago_id}', json=datos_observaciones)
-        return resp
+        if resp.status_code == 200:
+            return resp.json()
+        else:
+            raise Exception('Microservicio Pagos ha fallado.')

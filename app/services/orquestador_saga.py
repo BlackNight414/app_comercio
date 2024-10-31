@@ -14,23 +14,17 @@ def verificar_existencia_producto(producto_id: int, cantidad: int, medio_pago: s
     Sino, levanta una excepción alertando la inexistencia del producto. 
     """
     ms_catalogo = MsCatalogo()
-    resp = ms_catalogo.get_by_id(producto_id)
-    if resp.status_code == 200:
-        datos_producto = resp.json()
-        # Si no se encontró un producto con ese id, se levanta una excepción.
-        if 'NOT FOUND' in datos_producto.values():
-            raise Exception(f'No existe el producto con id={producto_id}')
-        
-        # Devolvemos un diccionario con los datos requeridos para las siguientes acciones
-        return {
-            'producto_id': producto_id,
-            'precio': datos_producto['precio'], # LLevamos el precio del producto para calcular el pago posteriormente
-            'cantidad': cantidad,
-            'medio_pago': medio_pago,
-            'direccion': direccion
-        }
-    else:
-        raise Exception('Microservicio Catálogo ha fallado.')
+    datos_producto = ms_catalogo.get_by_id(producto_id)
+    if 'NOT FOUND' in datos_producto.values():
+        raise Exception(f'No existe el producto con id={producto_id}')
+
+    return {
+        'producto_id': producto_id,
+        'precio': datos_producto['precio'], # LLevamos el precio del producto para calcular el pago posteriormente
+        'cantidad': cantidad,
+        'medio_pago': medio_pago,
+        'direccion': direccion
+    }
 
 def registrar_compra(**kwargs):
     """ 
@@ -38,15 +32,12 @@ def registrar_compra(**kwargs):
     (Utiliza el microservicio Compra). 
     """
     ms_compras = MsCompras()
-    resp = ms_compras.registrar_compra(kwargs['producto_id'], kwargs['direccion'])
-    if resp.status_code == 200:
-        datos_compra = resp.json()
-        precio_pago = kwargs['cantidad'] * float(kwargs['precio']) # calculamos el pago total
-        kwargs['compra_id'] = datos_compra['id'] # Agregamos el id compra
-        kwargs['precio_pago'] = precio_pago # Agregamos el precio total del pago para la siguiente acción
-        return kwargs
-    else:
-        raise Exception('Microservicio Compras ha fallado.')
+    # resp = ms_compras.registrar_compra(kwargs['producto_id'], kwargs['direccion'])
+    datos_compra = ms_compras.registrar_compra(kwargs['producto_id'], kwargs['direccion'])
+    precio_pago = kwargs['cantidad'] * float(kwargs['precio']) # calculamos el pago total
+    kwargs['compra_id'] = datos_compra['id'] # Agregamos el id compra
+    kwargs['precio_pago'] = precio_pago # Agregamos el precio total del pago para la siguiente acción
+    return kwargs
 
 def registrar_pago(**kwargs):
     """ 
@@ -54,13 +45,9 @@ def registrar_pago(**kwargs):
     (Utiliza el microservicio de Pago). 
     """
     ms_pagos = MsPagos()
-    resp = ms_pagos.registrar_pago(kwargs['producto_id'], kwargs['precio_pago'], kwargs['medio_pago'])
-    if resp.status_code == 200:
-        datos_pago = resp.json()
-        kwargs['pago_id'] = datos_pago['id'] # Agregamos el id del pago
-        return kwargs
-    else:
-        raise Exception('Microservicio Pagos ha fallado.')
+    datos_pago = ms_pagos.registrar_pago(kwargs['producto_id'], kwargs['precio_pago'], kwargs['medio_pago'])
+    kwargs['pago_id'] = datos_pago['id'] # Agregamos el id del pago
+    return kwargs
 
 def verificar_stock(**kwargs):
     """ 
@@ -71,26 +58,19 @@ def verificar_stock(**kwargs):
     """
     ms_inventario = MsInventario()
     # Consultamos el stock:
-    resp_stock = ms_inventario.consultar_stock(kwargs['producto_id'])
-    if resp_stock.status_code == 200:
-        datos_stock = resp_stock.json()
-        stock = float(datos_stock['stock'])
+    datos_stock = ms_inventario.consultar_stock(kwargs['producto_id'])
+    stock = float(datos_stock['stock'])
 
-        # Si el la cantidad que desea comprar es menor o igual al stock actual, entonces seguimos
-        if stock >= kwargs['cantidad']:
-            return kwargs
-        else:
-            raise Exception(f"Insuficiente stock del producto {kwargs['producto_id']}")
-
+    # Si el la cantidad que desea comprar es menor o igual al stock actual, entonces seguimos
+    if stock >= kwargs['cantidad']:
+        return kwargs
     else:
-        raise Exception('Microservicio Inventario - Verificación de stock ha fallado.')
+        raise Exception(f"Insuficiente stock del producto {kwargs['producto_id']}")
 
 def egresar_stock(**kwargs):
     """
-    Última acción del orquestador encargada de actualizar el stock en la BD (Utiliza el microservicio Inventario). \n
-    En realidad, inserta un registro de stock en el inventario, como salida del producto.
+    Última acción del orquestador encargada de ingresar un registro de salida del producto en el inventario. \n
     Si anduvo bien, se devuelve un mensaje de éxito.
-    Sino, se levanta una excepción de fallo del microservicio.
     """
     ms_inventario = MsInventario()
     # Actualizamos inventario con un registro de salida
@@ -130,7 +110,8 @@ class OrquestadorSaga:
     Utiliza la libería saga
     """
 
-    def proceso_compra(self , producto_id: int, cantidad: int, medio_pago: str , direccion: str):
+    # def proceso_compra(self, producto_id: int, cantidad: int, medio_pago: str , direccion: str):
+    def proceso_compra(self, producto_id: int, cantidad: int, medio_pago: str , direccion: str):
         """
         Método en el que se orquesta el proceso de compre de un producto
         """

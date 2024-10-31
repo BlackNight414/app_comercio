@@ -16,7 +16,10 @@ class MsCompras:
             'producto_id': producto_id,
             'direccion_envio': direccion}
         resp = requests.post(f'{self.__URL_MS}/registrar_compra', json=data)
-        return resp
+        if resp.status_code == 200:
+            return resp.json()
+        else:
+            raise Exception('Microservicio Compras ha fallado.')
         
     def eliminar_compra(self, id_compra: int, observaciones: str):
         datos_observaciones = {'observaciones': observaciones}
@@ -24,7 +27,7 @@ class MsCompras:
         if resp.status_code == 200:
             return resp.json()
         else:
-            raise resp.raise_for_status()
+            raise Exception('Microservicio Compras ha fallado.')
     
     
 

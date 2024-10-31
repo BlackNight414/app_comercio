@@ -12,8 +12,14 @@ class MsCatalogo:
     def get_by_id(self, id: int):
         # headers = {'x-proofdock-attack': '{"actions": [{"name": "delay", "value": "10"}]}'}
         resp = requests.get(url=f'{self.__URL_MS}/get_by_id/{id}')
-        return resp
+        if resp.status_code == 200:
+            return resp.json()
+        else:
+            raise Exception('Microservicio Catálogo ha fallado.')
     
     def get_all(self):
         resp = requests.get(url=f'{self.__URL_MS}/get_all')
-        return resp
+        if resp.status_code == 200:
+            return resp.json()
+        else:
+            raise Exception('Microservicio Catálogo ha fallado.')

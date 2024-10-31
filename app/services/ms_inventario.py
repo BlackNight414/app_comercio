@@ -16,9 +16,15 @@ class MsInventario:
             'cantidad': cantidad
         }
         resp = requests.post(f'{self.__URL_MS}/egresar_producto', json=datos_stock)
-        return resp
+        if resp.status_code == 200:
+            return resp
+        else:
+            raise Exception('Microservicio Inventario ha fallado.')
     
     @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3), retry_error_callback=ms_sin_respuesta)
     def consultar_stock(self, producto_id: int):
         resp = requests.get(f'{self.__URL_MS}/calcular_stock/{producto_id}')
-        return resp
+        if resp.status_code == 200:
+            return resp.json()
+        else:
+            raise Exception('Microservicio Inventario ha fallado.')

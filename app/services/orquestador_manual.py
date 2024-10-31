@@ -4,7 +4,7 @@ from datetime import date
 class OrquestadorManual:
 
     # Funcionalidad de compra de producto
-    def comprar_producto(self, producto_id: int, cantidad: int, fecha_compra: date, medio_pago: str , direccion: str):
+    def comprar_producto(self, producto_id: int, cantidad: int, medio_pago: str , direccion: str):
         ms_catalogo = MsCatalogo()
         ms_compras = MsCompras()
         ms_pagos = MsPagos()
@@ -18,7 +18,7 @@ class OrquestadorManual:
             datos_producto = resp_catalogo.json()
             
             # Compramos el producto
-            resp_compra = ms_compras.registrar_compra(producto_id, fecha_compra, direccion)
+            resp_compra = ms_compras.registrar_compra(producto_id, direccion)
             print('Respuesta POST compra: ', resp_compra.status_code)
             if resp_compra.status_code == 200:
                 
@@ -38,7 +38,7 @@ class OrquestadorManual:
 
                     if stock>cantidad: 
                         # Si el stock es mayor a la cantidad comprada, entonces despachamos
-                        resp_inventario = ms_inventario.egresar_producto(producto_id, date.today(), cantidad)
+                        resp_inventario = ms_inventario.egresar_producto(producto_id, cantidad)
                         print('Respuesta POST inventario: ', resp_inventario.status_code)
 
                         if resp_inventario.status_code == 200:
@@ -63,14 +63,3 @@ class OrquestadorManual:
             
         else:
             raise Exception('Microservicio de Catalogo ha fallado')
-                    
-
-                        
-                        
-
-                    
-
-        
-
-
-
