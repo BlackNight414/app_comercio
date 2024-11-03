@@ -29,30 +29,24 @@ def comprar_producto():
 @comercio.route('/comprar_producto_saga', methods=['POST']) 
 def comprar_producto_saga():    
     datos_compra = request.get_json()
-
-    producto_id = datos_compra['producto_id']
-    cantidad = datos_compra['cantidad']
-    medio_pago = datos_compra['medio_pago']
-    direccion = datos_compra['direccion']
+    carrito = carrito_schema.load(datos_compra)
 
     orquestador_compra = OrquestadorSaga()
     
-    exito = orquestador_compra.proceso_compra(producto_id, cantidad, medio_pago, direccion)
+    exito = orquestador_compra.proceso_compra(carrito)
 
     if exito:
-        resp = jsonify('¡PROCESO DE COMPRA COMPLETADO CON EXITO! :D')
+        resp = carrito_schema.dump(carrito), 200
     else:
-        resp = jsonify('PROCESO DE COMPRA HA FALLADO :(')
-    return resp, 200
+        resp = jsonify('PROCESO DE COMPRA HA FALLADO :('), 200
+    return resp
     
 @comercio.route('/catalogo/<int:id>')
 def producto(id):
     ms_catalogo = MsCatalogo()
-    result = ms_catalogo.get_by_id(id)
 
-    if result.status_code == 200:
-        producto = result.json()
+    try:
+        producto = ms_catalogo.get_by_id(id)
         return producto
-    else:
-        return jsonify('Microservicio Catalogo no responde')
-    
+    except:
+        return jsonify('Microservicio Catalogo no responde.')

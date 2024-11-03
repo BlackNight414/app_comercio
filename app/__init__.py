@@ -1,11 +1,11 @@
 from flask import Flask
-# from flask_marshmallow import Marshmallow
+from flask_marshmallow import Marshmallow
 import os
 from app.config import config
 
 from pdchaos.middleware.contrib.flask.flask_middleware import FlaskMiddleware
 
-# ma = Marshmallow()
+ma = Marshmallow()
 #middleware = FlaskMiddleware()
 
 def create_app():
@@ -18,7 +18,7 @@ def create_app():
     #app.config['CHAOS_MIDDLEWARE_APPLICATION_ENV'] = 'development' 
     #middleware.init_app(app)
 
-    # ma.init_app(app)
+    ma.init_app(app)
 
     from app.resources import comercio
     app.register_blueprint(comercio, url_prefix='/comercio')

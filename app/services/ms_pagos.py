@@ -2,13 +2,12 @@ import requests
 import os
 
 from tenacity import retry, wait_random, stop_after_attempt
-from app.services.ms_sin_respuesta import ms_sin_respuesta
 
 class MsPagos:
 
     __URL_MS = os.getenv('URL_MS_PAGOS')
 
-    @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3), retry_error_callback=ms_sin_respuesta)
+    @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3))
     def registrar_pago(self, producto_id: int, precio: float, medio_pago: str):
         data = {
             'producto_id': producto_id,

@@ -1,16 +1,12 @@
 import requests
 import os
-from datetime import date
 from tenacity import retry, stop_after_attempt, wait_random
-
-from app.services.ms_sin_respuesta import ms_sin_respuesta
-
 
 class MsCompras:
 
     __URL_MS = os.getenv('URL_MS_COMPRAS') # Busca la URL en variables de entorno
 
-    @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3), retry_error_callback=ms_sin_respuesta)
+    @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3))
     def registrar_compra(self, producto_id: int, direccion: str):
         data = {
             'producto_id': producto_id,

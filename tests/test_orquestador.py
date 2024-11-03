@@ -1,7 +1,7 @@
 import unittest
 from app import create_app
 from app.services import OrquestadorSaga
-from datetime import date
+from app.models import Carrito
 
 class TestProcesoCompraSaga(unittest.TestCase):
 
@@ -14,12 +14,16 @@ class TestProcesoCompraSaga(unittest.TestCase):
         orquestador = OrquestadorSaga()
 
         # datos
-        producto_id = 1
-        cantidad = 1
-        medio_pago = 'debito'
-        direccion = 'Calle Falsa 123'
+        datos_carrito = {
+            'producto_id': 1,
+            'cantidad': 1,
+            'medio_pago': 'debito',
+            'direccion_envio': 'Calle Falsa 123'
+        }
 
-        exito = orquestador.proceso_compra(producto_id, cantidad, medio_pago, direccion)
+        mi_carrito = Carrito(**datos_carrito)
+
+        exito = orquestador.proceso_compra(mi_carrito)
         self.assertTrue(exito, 'Un proseco del Orquestador ha fallado')
 
 
