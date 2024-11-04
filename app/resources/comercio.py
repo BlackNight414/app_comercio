@@ -2,11 +2,12 @@ from flask import Blueprint, jsonify, request
 from app.services import OrquestadorManual, OrquestadorSaga
 
 from app.services import MsCatalogo
-from app.mapping import CarritoSchema
+from app.mapping import CarritoSchema, ProductoSchema
 from app.models import Carrito
 
 comercio = Blueprint('comercio', __name__)
 carrito_schema = CarritoSchema()
+producto_schema= ProductoSchema()
 
 @comercio.route('/comprar_producto_manual', methods=['POST'])
 def comprar_producto():
@@ -49,4 +50,4 @@ def producto(id):
         producto = ms_catalogo.get_by_id(id)
         return producto
     except:
-        return jsonify('Microservicio Catalogo no responde.')
+        return jsonify('Microservicio Catalogo no responde.'), 200    

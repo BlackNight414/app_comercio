@@ -10,17 +10,14 @@ class AccionesProcesoCompra:
         """  
         Primera acción del orquetador del proceso de compra de un producto
         (Utiliza el microservicio Catalogo). \n
-        Calcula el precio total del producto y lo define en el parámetro. \n
+        Calcula el precio total del carrito y lo define en el parámetro. \n
         En caso de no existir el producto, levanta una excepción.
         """
         ms_catalogo = MsCatalogo()
-        datos_producto = ms_catalogo.get_by_id(carrito.producto_id)
-        # Si el producto no fue encontrado, se levanta una excepción.
-        if 'NOT FOUND' in datos_producto.values():
-            raise Exception(f'No existe el producto con id={carrito.producto_id}')
+        producto = ms_catalogo.get_by_id(carrito.producto_id)
         
         # Adjuntamos el precio para el pago del carrito
-        carrito.precio_pago = carrito.cantidad * datos_producto['precio']
+        carrito.precio_pago = carrito.cantidad * producto.precio
 
     def registrar_compra(self, carrito: Carrito):
         """ 
@@ -49,8 +46,7 @@ class AccionesProcesoCompra:
         """
         ms_inventario = MsInventario()
         # Consultamos el stock:
-        datos_stock = ms_inventario.consultar_stock(carrito.producto_id)
-        stock = float(datos_stock['stock'])
+        stock = ms_inventario.consultar_stock(carrito.producto_id)
 
         # Si el la cantidad del carrito supera el stock, se cancela la compra
         if carrito.cantidad > stock:
