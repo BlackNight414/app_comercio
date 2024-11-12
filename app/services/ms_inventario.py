@@ -9,6 +9,25 @@ class MsInventario:
     __URL_MS = os.getenv('URL_MS_INVENTARIO')
 
     @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3))
+    def ingresar_producto(self, producto_id: int, cantidad: float):
+        datos_stock = {
+            'producto_id': producto_id,
+            'cantidad': cantidad
+        }
+        resp = requests.post(f'{self.__URL_MS}/ingresar_producto',json=datos_stock)
+        if resp.status_code == 200:
+
+            # Actualizamos el stock de cache si es que existe
+            stock = cache.get(f'stock_producto_id_{producto_id}')
+            if stock:
+                cache.set(f'stock_producto_id_{producto_id}', stock+cantidad, timeout=60)
+            
+            return resp
+        else:
+            raise Exception('Microservicio Inventario ha fallado.')
+
+
+    @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3))
     def egresar_producto(self, producto_id: int, cantidad: float):
         datos_stock = {
             'producto_id': producto_id,

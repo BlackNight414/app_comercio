@@ -52,13 +52,16 @@ class AccionesProcesoCompra:
         if carrito.cantidad > stock:
             raise Exception(f"Insuficiente stock del producto {carrito.producto_id}")
 
-    def egresar_stock(self, carrito: Carrito):
+    def retirar_stock(self, carrito: Carrito):
         """
         Última acción del orquestador encargada de ingresar un registro de salida del producto en el inventario.
         """
         ms_inventario = MsInventario()
         # Actualizamos inventario con un registro de salida
         ms_inventario.egresar_producto(carrito.producto_id, carrito.cantidad)
+
+        # A modo de prueba, que exista un fallo luego de haber retirado stock
+        # raise Exception('Falsa Alarma para testeo')
 
     """ Acciones compensatorias """
 
@@ -83,6 +86,14 @@ class AccionesProcesoCompra:
         ms_pagos = MsPagos()
         observaciones = 'Motivo de eliminacion: Insuficiente stock o microservicio de Inventario ha fallado.'
         ms_pagos.eliminar_pago(carrito.pago_id, observaciones)
+    
+    def reponer_stock(self, carrito: Carrito):
+        """
+        Acción compensatioria que ingresa (repone) la misma cantidad del carrito al inventario del producto, 
+        en caso de que algo falle.
+        """
+        ms_inventario = MsInventario()
+        ms_inventario.ingresar_producto(carrito.producto_id, carrito.cantidad)
 
 class OrquestadorSaga:
     """ 
@@ -103,7 +114,7 @@ class OrquestadorSaga:
                 .action(lambda: acciones.registrar_compra(carrito), lambda: acciones.nada()) \
                 .action(lambda: acciones.registrar_pago(carrito), lambda: acciones.eliminar_compra(carrito)) \
                 .action(lambda: acciones.verificar_stock(carrito), lambda: acciones.eliminar_pago(carrito)) \
-                .action(lambda: acciones.egresar_stock(carrito), lambda: acciones.nada()) \
+                .action(lambda: acciones.retirar_stock(carrito), lambda: acciones.reponer_stock(carrito)) \
                 .build().execute()
             exito = not exito
 
