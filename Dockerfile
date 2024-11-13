@@ -1,4 +1,5 @@
 FROM python:3.10-slim-bullseye
+ENV TZ=America/Argentina/Mendoza
 
 ENV GECKODRIVER_VER=v0.31.0
 ENV FLASK_ENV=production
@@ -9,6 +10,7 @@ RUN useradd --create-home --home-dir /home/flaskapp flaskapp
 RUN apt-get update
 RUN apt-get install -y python3-dev build-essential
 RUN apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+RUN ln -sf /user/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/flaskapp

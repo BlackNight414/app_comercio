@@ -6,6 +6,8 @@ from app.models import Producto
 from app.mapping import ProductoSchema
 from app import cache
 
+import logging
+
 producto_schema = ProductoSchema()
 
 class MsCatalogo:
@@ -14,6 +16,7 @@ class MsCatalogo:
 
     @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3))
     def get_by_id(self, id: int) -> Producto:
+        # logging.info('Consultando producto a Catalogo..')
         # headers = {'x-proofdock-attack': '{"actions": [{"name": "delay", "value": "10"}]}'}
         producto = cache.get(f'producto_id_{id}')
         if producto is None:
@@ -25,8 +28,10 @@ class MsCatalogo:
                 producto = producto_schema.load(resp.json())
                 cache.set(f'producto_id_{id}', producto, timeout=30)
             else:
+                logging.error('Microservicio Catálogo ha fallado.')
                 raise Exception('Microservicio Catálogo ha fallado.')
         
+        logging.info(f'Se ha consultado el producto id={producto.id}')
         return producto
     
     def get_all(self):

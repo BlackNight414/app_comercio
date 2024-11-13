@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app.services import OrquestadorManual, OrquestadorSaga
-
+import logging
 from app.services import MsCatalogo
 from app.mapping import CarritoSchema, ProductoSchema
 from app.models import Carrito
@@ -24,7 +24,7 @@ def comprar_producto():
         resp = orquestador_compra.comprar_producto(producto_id, cantidad, medio_pago, direccion)
         return jsonify(resp)
     except BaseException as e:
-        print(e)
+        logging.error(e)
         return jsonify('Proceso Orquestador ha fallado.')
 
 @comercio.route('/comprar_producto_saga', methods=['POST']) 
@@ -37,8 +37,10 @@ def comprar_producto_saga():
     exito = orquestador_compra.proceso_compra(carrito)
 
     if exito:
+        logging.info('Proceso de compra de producto completado.')
         resp = carrito_schema.dump(carrito), 200
     else:
+        logging.error('El proceso de compra ha fallado.')
         resp = jsonify('PROCESO DE COMPRA HA FALLADO :('), 200
     return resp
     
@@ -49,5 +51,6 @@ def producto(id):
     try:
         producto = ms_catalogo.get_by_id(id)
         return producto
-    except:
+    except Exception as e:
+        logging.error(e)
         return jsonify('Microservicio Catalogo no responde.'), 200    

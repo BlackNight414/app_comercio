@@ -31,6 +31,14 @@ def create_app():
         'CACHE_KEY_PREFIX': 'comercio_'
     })
 
+    import logging
+    logging.basicConfig(
+            level=logging.INFO, 
+            format="{asctime} - {levelname} - {message}", # formato de mensaje log
+            style="{",
+            datefmt="%Y-%m-%d %H:%M", # formato de tiempo
+            ) 
+
     from app.resources import comercio
     app.register_blueprint(comercio, url_prefix='/comercio')
     

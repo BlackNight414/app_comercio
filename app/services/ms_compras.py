@@ -1,5 +1,6 @@
 import requests
 import os
+import logging
 from tenacity import retry, stop_after_attempt, wait_random
 
 class MsCompras:
@@ -13,14 +14,17 @@ class MsCompras:
             'direccion_envio': direccion}
         resp = requests.post(f'{self.__URL_MS}/registrar_compra', json=data)
         if resp.status_code == 200:
+            logging.info(f'Compra registrada')
             return resp.json()
         else:
+            logging.error('Microservicio Compras ha fallado.')
             raise Exception('Microservicio Compras ha fallado.')
         
     def eliminar_compra(self, id_compra: int, observaciones: str):
         datos_observaciones = {'observaciones': observaciones}
         resp = requests.delete(f'{self.__URL_MS}/eliminar_compra/{id_compra}', json=datos_observaciones)
         if resp.status_code == 200:
+            logging.info(f'Compra id={id_compra} eliminada')
             return resp.json()
         else:
             raise Exception('Microservicio Compras ha fallado.')

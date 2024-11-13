@@ -24,7 +24,7 @@ class TestProcesoCompraSaga(unittest.TestCase):
         mi_carrito = Carrito(**datos_carrito)
 
         exito = orquestador.proceso_compra(mi_carrito)
-        self.assertTrue(exito, 'Un proseco del Orquestador ha fallado')
+        self.assertTrue(exito, 'Un proceso del Orquestador ha fallado')
 
 
 if __name__ == '__main__':

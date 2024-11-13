@@ -1,5 +1,6 @@
 import requests
 import os
+import logging
 
 from tenacity import retry, wait_random, stop_after_attempt
 from app import cache
@@ -22,8 +23,10 @@ class MsInventario:
             if stock:
                 cache.set(f'stock_producto_id_{producto_id}', stock+cantidad, timeout=60)
             
+            logging.info(f'Se ha ingresado stock al producto id={producto_id}')
             return resp
         else:
+            logging.error('Microservicio Inventario ha fallado.')
             raise Exception('Microservicio Inventario ha fallado.')
 
 
@@ -41,8 +44,10 @@ class MsInventario:
             if stock:
                 cache.set(f'stock_producto_id_{producto_id}', stock-cantidad, timeout=60)
             
+            logging.info(f'Se ha retirado stock del producto {producto_id}')
             return resp
         else:
+            logging.error('Microservicio Inventario ha fallado.')
             raise Exception('Microservicio Inventario ha fallado.')
     
     @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3))
@@ -54,6 +59,8 @@ class MsInventario:
                 stock = float(resp.json()['stock'])
                 cache.set(f'stock_producto_id_{producto_id}', stock, timeout=60) # Guardamos el stock en cache
             else:
+                logging.error('Microservicio Inventario ha fallado.')
                 raise Exception('Microservicio Inventario ha fallado.')
         
+        logging.info(f'Stock del producto id={producto_id} -> {stock}')
         return stock

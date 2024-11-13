@@ -1,6 +1,7 @@
 from saga import SagaBuilder, SagaError
 from app.services import MsCatalogo, MsCompras, MsPagos, MsInventario
 from app.models import Carrito
+import logging
 
 """ Acciones """
 
@@ -50,7 +51,8 @@ class AccionesProcesoCompra:
 
         # Si el la cantidad del carrito supera el stock, se cancela la compra
         if carrito.cantidad > stock:
-            raise Exception(f"Insuficiente stock del producto {carrito.producto_id}")
+            logging.warning(f'Insuficiente stock del producto {carrito.producto_id}')
+            raise Exception(f'Insuficiente stock del producto {carrito.producto_id}')
 
     def retirar_stock(self, carrito: Carrito):
         """
@@ -120,7 +122,7 @@ class OrquestadorSaga:
 
         except SagaError as error:
             for e in error.args:
-                print(e)
+                logging.error(e)
 
         return exito
     
