@@ -2,6 +2,9 @@ from saga import SagaBuilder, SagaError
 from app.services import MsCatalogo, MsCompras, MsPagos, MsInventario
 from app.models import Carrito
 import logging
+from threading import Lock 
+
+lock = Lock()
 
 """ Acciones """
 
@@ -45,14 +48,20 @@ class AccionesProcesoCompra:
         En caso de haber suficiente stock, prosigue a la siguiente acción. \n
         Sino, levanta una excepción de insuficiencia de stock y se pasa a compensar eliminando pago y compra.
         """
-        ms_inventario = MsInventario()
-        # Consultamos el stock:
-        stock = ms_inventario.consultar_stock(carrito.producto_id)
+        # Se pide el token, con tiempo de espera
+        if lock.acquire(): 
+            ms_inventario = MsInventario()
+            # Consultamos el stock:
+            stock = ms_inventario.consultar_stock(carrito.producto_id)
 
-        # Si el la cantidad del carrito supera el stock, se cancela la compra
-        if carrito.cantidad > stock:
-            logging.warning(f'Insuficiente stock del producto {carrito.producto_id}')
-            raise Exception(f'Insuficiente stock del producto {carrito.producto_id}')
+            # Si el la cantidad del carrito supera el stock, se cancela la compra
+            if carrito.cantidad > stock:
+                logging.warning(f'Insuficiente stock del producto {carrito.producto_id}')
+                lock.release() # Liberamos en caso de no haber suficiente stock
+                raise Exception(f'Insuficiente stock del producto {carrito.producto_id}')
+        else: # En caso de haberse cumplido el tiempo de espera. Se cancela la compra
+            logging.warning('Timeout de acceso del Hilo agotado. Se cancela la compra.')
+            raise Exception('Timeout de acceso del Hilo agotado. Se cancela la compra.')
 
     def retirar_stock(self, carrito: Carrito):
         """
@@ -64,10 +73,11 @@ class AccionesProcesoCompra:
 
         # A modo de prueba, que exista un fallo luego de haber retirado stock
         # raise Exception('Falsa Alarma para testeo')
+        lock.release() # Libera el token
 
     """ Acciones compensatorias """
 
-    def nada(self):
+    def sin_accion(self):
         """ Función vacía para cuando no se requiera una compensación en una acción """
         pass
 
@@ -85,6 +95,9 @@ class AccionesProcesoCompra:
         """
         Acción compensatoria encargada de eliminar el registro de pago en base al pago_id del carrito.
         """
+        if lock.locked():
+            lock.release()
+
         ms_pagos = MsPagos()
         observaciones = 'Motivo de eliminacion: Insuficiente stock o microservicio de Inventario ha fallado.'
         ms_pagos.eliminar_pago(carrito.pago_id, observaciones)
@@ -94,6 +107,9 @@ class AccionesProcesoCompra:
         Acción compensatioria que ingresa (repone) la misma cantidad del carrito al inventario del producto, 
         en caso de que algo falle.
         """
+        if lock.locked():
+            lock.release()
+
         ms_inventario = MsInventario()
         ms_inventario.ingresar_producto(carrito.producto_id, carrito.cantidad)
 
@@ -112,8 +128,8 @@ class OrquestadorSaga:
         try:
             SagaBuilder \
                 .create() \
-                .action(lambda: acciones.calcular_precio_pago(carrito), lambda: acciones.nada()) \
-                .action(lambda: acciones.registrar_compra(carrito), lambda: acciones.nada()) \
+                .action(lambda: acciones.calcular_precio_pago(carrito), lambda: acciones.sin_accion()) \
+                .action(lambda: acciones.registrar_compra(carrito), lambda: acciones.sin_accion()) \
                 .action(lambda: acciones.registrar_pago(carrito), lambda: acciones.eliminar_compra(carrito)) \
                 .action(lambda: acciones.verificar_stock(carrito), lambda: acciones.eliminar_pago(carrito)) \
                 .action(lambda: acciones.retirar_stock(carrito), lambda: acciones.reponer_stock(carrito)) \
