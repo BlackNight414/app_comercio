@@ -38,11 +38,11 @@ def comprar_producto_saga():
 
     if exito:
         logging.info('Proceso de compra de producto completado.')
-        resp = carrito_schema.dump(carrito), 200
+        resp = carrito_schema.dump(carrito)
     else:
-        logging.error('El proceso de compra ha fallado.')
-        resp = jsonify('PROCESO DE COMPRA HA FALLADO :('), 200
-    return resp
+        logging.error('El proceso de compra no pudo completarse.')
+        resp = jsonify('PROCESO DE COMPRA HA FALLADO :(')
+    return resp, 200
     
 @comercio.route('/catalogo/<int:id>')
 def producto(id):
@@ -50,7 +50,7 @@ def producto(id):
 
     try:
         producto = ms_catalogo.get_by_id(id)
-        return producto
+        return producto_schema.dump(producto), 200
     except Exception as e:
         logging.error(e)
-        return jsonify('Microservicio Catalogo no responde.'), 200    
+        return jsonify('Microservicio Catalogo no responde.'), 500    
