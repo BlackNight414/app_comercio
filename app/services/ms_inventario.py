@@ -45,7 +45,7 @@ class MsInventario:
                 cache.set(f'stock_producto_id_{producto_id}', stock-cantidad, timeout=60)
             
             logging.info(f'Se ha retirado stock del producto {producto_id}')
-            return resp
+            return resp.json()
         else:
             logging.error('Microservicio Inventario ha fallado.')
             raise Exception('Microservicio Inventario ha fallado.')

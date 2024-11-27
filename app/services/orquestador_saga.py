@@ -38,29 +38,17 @@ class AccionesProcesoCompra:
         datos_pago = ms_pagos.registrar_pago(carrito.producto_id, carrito.precio_pago, carrito.medio_pago)
         carrito.pago_id = datos_pago['id'] # Agregamos el id del pago
 
-    def verificar_stock(self, carrito: Carrito):
-        """ 
-        Acción encargada de verificar el stock del producto a comprar
-        (Utiliza el microservicio Inventario) \n
-        En caso de haber suficiente stock, prosigue a la siguiente acción. \n
-        Sino, levanta una excepción de insuficiencia de stock y se pasa a compensar eliminando pago y compra.
-        """
-        ms_inventario = MsInventario()
-        # Consultamos el stock:
-        stock = ms_inventario.consultar_stock(carrito.producto_id)
-
-        # Si el la cantidad del carrito supera el stock, se cancela la compra
-        if carrito.cantidad > stock:
-            logging.warning(f'Insuficiente stock del producto {carrito.producto_id}')
-            raise Exception(f'Insuficiente stock del producto {carrito.producto_id}')
-
     def retirar_stock(self, carrito: Carrito):
         """
         Última acción del orquestador encargada de ingresar un registro de salida del producto en el inventario.
         """
         ms_inventario = MsInventario()
         # Actualizamos inventario con un registro de salida
-        ms_inventario.egresar_producto(carrito.producto_id, carrito.cantidad)
+        resp_info = ms_inventario.egresar_producto(carrito.producto_id, carrito.cantidad)
+        if 'Not stock' in resp_info.values():
+            raise Exception(resp_info['msg'])
+
+        carrito.stock_id = resp_info['id']
 
         # A modo de prueba, que exista un fallo luego de haber retirado stock
         # raise Exception('Falsa Alarma para testeo')
@@ -76,26 +64,29 @@ class AccionesProcesoCompra:
         """
         Acción compensatoria encargada de eliminar el registro de compra en base al compra_id del carrito
         """
-        ms_compras = MsCompras()
-        observaciones = 'Motivo de eliminacion: Insuficiente stock o microservicios de Pagos y/o Inventario han fallado.'
-        ms_compras.eliminar_compra(carrito.compra_id, observaciones)
+        if carrito.compra_id:
+            ms_compras = MsCompras()
+            observaciones = 'Motivo de eliminacion: Insuficiente stock o microservicios de Pagos y/o Inventario han fallado.'
+            ms_compras.eliminar_compra(carrito.compra_id, observaciones)
 
 
     def eliminar_pago(self, carrito: Carrito):
         """
         Acción compensatoria encargada de eliminar el registro de pago en base al pago_id del carrito.
         """
-        ms_pagos = MsPagos()
-        observaciones = 'Motivo de eliminacion: Insuficiente stock o microservicio de Inventario ha fallado.'
-        ms_pagos.eliminar_pago(carrito.pago_id, observaciones)
+        if carrito.pago_id:
+            ms_pagos = MsPagos()
+            observaciones = 'Motivo de eliminacion: Insuficiente stock o microservicio de Inventario ha fallado.'
+            ms_pagos.eliminar_pago(carrito.pago_id, observaciones)
     
     def reponer_stock(self, carrito: Carrito):
         """
         Acción compensatioria que ingresa (repone) la misma cantidad del carrito al inventario del producto, 
         en caso de que algo falle.
         """
-        ms_inventario = MsInventario()
-        ms_inventario.ingresar_producto(carrito.producto_id, carrito.cantidad)
+        if carrito.stock_id:
+            ms_inventario = MsInventario()
+            ms_inventario.ingresar_producto(carrito.producto_id, carrito.cantidad)
 
 class OrquestadorSaga:
     """ 
@@ -113,9 +104,8 @@ class OrquestadorSaga:
             SagaBuilder \
                 .create() \
                 .action(lambda: acciones.calcular_precio_pago(carrito), lambda: acciones.nada()) \
-                .action(lambda: acciones.registrar_compra(carrito), lambda: acciones.nada()) \
-                .action(lambda: acciones.registrar_pago(carrito), lambda: acciones.eliminar_compra(carrito)) \
-                .action(lambda: acciones.verificar_stock(carrito), lambda: acciones.eliminar_pago(carrito)) \
+                .action(lambda: acciones.registrar_compra(carrito), lambda: acciones.eliminar_compra(carrito)) \
+                .action(lambda: acciones.registrar_pago(carrito), lambda: acciones.eliminar_pago(carrito)) \
                 .action(lambda: acciones.retirar_stock(carrito), lambda: acciones.reponer_stock(carrito)) \
                 .build().execute()
             exito = not exito

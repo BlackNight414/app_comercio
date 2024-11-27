@@ -9,4 +9,5 @@ class Carrito:
 
     compra_id: int = None
     pago_id: int = None
+    stock_id: int = None
     precio_pago: float = None
