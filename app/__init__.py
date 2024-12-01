@@ -4,11 +4,9 @@ from flask_caching import Cache
 import os
 from app.config import config
 
-from pdchaos.middleware.contrib.flask.flask_middleware import FlaskMiddleware
 
 ma = Marshmallow()
 cache = Cache()
-#middleware = FlaskMiddleware()
 
 def create_app():
     app_context = os.getenv('FLASK_CONTEXT')
@@ -16,9 +14,6 @@ def create_app():
     f = config.factory(app_context if app_context else 'development')
     app.config.from_object(f)
     
-    #app.config['CHAOS_MIDDLEWARE_APPLICATION_NAME'] = 'catalogo' # microservicio 
-    #app.config['CHAOS_MIDDLEWARE_APPLICATION_ENV'] = 'development' 
-    #middleware.init_app(app)
 
     ma.init_app(app)
     cache.init_app(app, config={
@@ -28,7 +23,7 @@ def create_app():
         'CACHE_REDIS_PORT': os.getenv('REDIS_PORT'),
         'CACHE_REDIS_DB': os.getenv('REDIS_DB'),
         'CACHE_REDIS_PASSWORD': os.getenv('REDIS_PASSWORD'),
-        'CACHE_KEY_PREFIX': 'comercio_'
+        'CACHE_KEY_PREFIX': ''
     })
 
     import logging

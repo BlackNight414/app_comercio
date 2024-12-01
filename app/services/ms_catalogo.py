@@ -17,7 +17,6 @@ class MsCatalogo:
     @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3))
     def get_by_id(self, id: int) -> Producto:
         # logging.info('Consultando producto a Catalogo..')
-        # headers = {'x-proofdock-attack': '{"actions": [{"name": "delay", "value": "10"}]}'}
         producto = cache.get(f'producto_id_{id}')
         if producto is None:
             resp = requests.get(url=f'{self.__URL_MS}/get_by_id/{id}')
