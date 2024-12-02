@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.services import OrquestadorManual, OrquestadorSaga
+from app.services import OrquestadorSaga
 import logging
 from app.services import MsCatalogo, MsInventario
 from app.mapping import CarritoSchema, ProductoSchema
