@@ -5,11 +5,14 @@ from app.services import MsCatalogo, MsInventario
 from app.mapping import CarritoSchema, ProductoSchema
 from app.models import Carrito
 
+from app import limiter
+
 comercio = Blueprint('comercio', __name__)
 carrito_schema = CarritoSchema()
 producto_schema= ProductoSchema()
 
 @comercio.route('/comprar_producto_saga', methods=['POST']) 
+@limiter.limit('100/second')
 def comprar_producto_saga():    
     datos_compra = request.get_json()
     carrito = carrito_schema.load(datos_compra)
@@ -20,13 +23,14 @@ def comprar_producto_saga():
 
     if exito:
         logging.info('Proceso de compra de producto completado.')
-        resp = carrito_schema.dump(carrito)
+        resp = carrito_schema.dump(carrito), 200
     else:
         logging.error('El proceso de compra no pudo completarse.')
-        resp = jsonify('PROCESO DE COMPRA HA FALLADO :(')
-    return resp, 200
+        resp = jsonify('PROCESO DE COMPRA HA FALLADO :('), 422
+    return resp
     
 @comercio.route('/catalogo/<int:id>')
+@limiter.limit('10 per minute')
 def producto(id):
     ms_catalogo = MsCatalogo()
 
@@ -38,6 +42,7 @@ def producto(id):
         return jsonify('Microservicio Catalogo no responde.'), 200
 
 @comercio.route('/consultar_stock/<int:producto_id>')
+@limiter.limit('60 per minute')
 def consultar_stock(producto_id):
     ms_inventario = MsInventario()
     try:

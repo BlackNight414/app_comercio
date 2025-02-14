@@ -1,12 +1,17 @@
-from flask import Flask
+from flask import Flask, jsonify
 from flask_marshmallow import Marshmallow
 from flask_caching import Cache
 import os
 from app.config import config
 
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 ma = Marshmallow()
 cache = Cache()
+limiter = Limiter(
+    get_remote_address,
+    storage_uri='memory://')
 
 def create_app():
     app_context = os.getenv('FLASK_CONTEXT')
@@ -25,6 +30,7 @@ def create_app():
         'CACHE_REDIS_PASSWORD': os.getenv('REDIS_PASSWORD'),
         'CACHE_KEY_PREFIX': ''
     })
+    limiter.init_app(app)
 
     import logging
     logging.basicConfig(
@@ -41,4 +47,8 @@ def create_app():
     def ctx():
         return {"app": app}
     
+    @app.errorhandler(429)
+    def too_many_request(error):
+        return jsonify({'msg':'Too many requests'}), 429
+
     return app
