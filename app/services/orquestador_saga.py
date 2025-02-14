@@ -45,7 +45,7 @@ class AccionesProcesoCompra:
         ms_inventario = MsInventario()
         # Actualizamos inventario con un registro de salida
         resp_info = ms_inventario.egresar_producto(carrito.producto_id, carrito.cantidad)
-        if 'Not stock' in resp_info.values():
+        if 'Failed' in resp_info.values():
             raise Exception(resp_info['msg'])
 
         carrito.stock_id = resp_info['id']
@@ -96,7 +96,7 @@ class OrquestadorSaga:
 
     def proceso_compra(self, carrito: Carrito):
         """
-        Método en el que se orquesta el proceso de compre de un producto
+        Método en el que se orquesta el proceso de compra de un producto
         """
         acciones = AccionesProcesoCompra() 
         exito = False

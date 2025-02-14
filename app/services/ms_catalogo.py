@@ -16,10 +16,9 @@ class MsCatalogo:
 
     @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3))
     def get_by_id(self, id: int) -> Producto:
-        # logging.info('Consultando producto a Catalogo..')
         producto = cache.get(f'producto_id_{id}')
         if producto is None:
-            resp = requests.get(url=f'{self.__URL_MS}/get_by_id/{id}')
+            resp = requests.get(url=f'{self.__URL_MS}/get_by_id/{id}', verify=False)
             if resp.status_code == 200:
                 if 'NOT FOUND' in resp.json().values(): # Lanzamos excepción si no existe el producto
                     raise Exception(f'Producto id={id} no existe.')
@@ -34,7 +33,7 @@ class MsCatalogo:
         return producto
     
     def get_all(self):
-        resp = requests.get(url=f'{self.__URL_MS}/get_all')
+        resp = requests.get(url=f'{self.__URL_MS}/get_all', verify=False)
         if resp.status_code == 200:
             return resp.json()
         else:

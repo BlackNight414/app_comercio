@@ -12,7 +12,7 @@ class MsCompras:
         data = {
             'producto_id': producto_id,
             'direccion_envio': direccion}
-        resp = requests.post(f'{self.__URL_MS}/registrar_compra', json=data)
+        resp = requests.post(f'{self.__URL_MS}/registrar_compra', json=data, verify=False)
         if resp.status_code == 200:
             logging.info(f'Compra registrada')
             return resp.json()
@@ -22,7 +22,7 @@ class MsCompras:
         
     def eliminar_compra(self, id_compra: int, observaciones: str):
         datos_observaciones = {'observaciones': observaciones}
-        resp = requests.delete(f'{self.__URL_MS}/eliminar_compra/{id_compra}', json=datos_observaciones)
+        resp = requests.delete(f'{self.__URL_MS}/eliminar_compra/{id_compra}', json=datos_observaciones, verify=False)
         if resp.status_code == 200:
             logging.info(f'Compra id={id_compra} eliminada')
             return resp.json()

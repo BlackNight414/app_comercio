@@ -15,7 +15,7 @@ class MsInventario:
             'producto_id': producto_id,
             'cantidad': cantidad
         }
-        resp = requests.post(f'{self.__URL_MS}/ingresar_producto',json=datos_stock)
+        resp = requests.post(f'{self.__URL_MS}/ingresar_producto', json=datos_stock, verify=False)
         if resp.status_code == 200:            
             logging.info(f'Se ha ingresado stock al producto id={producto_id}')
             return resp.json()
@@ -30,8 +30,8 @@ class MsInventario:
             'producto_id': producto_id,
             'cantidad': cantidad
         }
-        resp = requests.post(f'{self.__URL_MS}/egresar_producto', json=datos_stock)
-        if resp.status_code == 200:
+        resp = requests.post(f'{self.__URL_MS}/egresar_producto', json=datos_stock, verify=False)
+        if resp.status_code in [200, 422]:
             return resp.json()
         else:
             logging.error('Microservicio Inventario ha fallado.')
@@ -41,7 +41,7 @@ class MsInventario:
     def consultar_stock(self, producto_id: int):
         stock = cache.get(f'inventario_stock_producto_id_{producto_id}') # Consultamos el stock en cache
         if stock is None:
-            resp = requests.get(f'{self.__URL_MS}/calcular_stock/{producto_id}')
+            resp = requests.get(f'{self.__URL_MS}/calcular_stock/{producto_id}', verify=False)
             if resp.status_code == 200:
                 stock = int(resp.json()['stock'])
             else:
