@@ -1,4 +1,5 @@
-from dataclasses import dataclass, InitVar
+from dataclasses import dataclass
+from app.models.producto import Producto
 
 @dataclass
 class Carrito:
@@ -7,6 +8,7 @@ class Carrito:
     medio_pago: str
     direccion_envio: str
 
+    producto: Producto = None
     compra_id: int = None
     pago_id: int = None
     stock_id: int = None

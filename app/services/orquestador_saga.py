@@ -7,18 +7,27 @@ import logging
 
 class AccionesProcesoCompra:
 
-    def calcular_precio_pago(self, carrito: Carrito):
-        """  
-        Primera acción del orquetador del proceso de compra de un producto
+    def verificar_producto_activado(self, carrito: Carrito):
+        """
+        Acción que verifica si un producto está activado para proceder con su compra
         (Utiliza el microservicio Catalogo). \n
-        Calcula el precio total del carrito y lo define en el parámetro. \n
-        En caso de no existir el producto, levanta una excepción.
+        En caso de no estar activado, levanta una excepción.
         """
         ms_catalogo = MsCatalogo()
         producto = ms_catalogo.get_by_id(carrito.producto_id)
+        if not producto.activado:
+            raise Exception(f'Producto id-{producto.id} no está disponible para su compra')
         
+        # Adjuntamos el producto
+        carrito.producto = producto
+
+    def calcular_precio_pago(self, carrito: Carrito):
+        """  
+        Acción que calcula el precio total del carrito y lo define en el atributo.
+        """
+        precio = carrito.producto.precio
         # Adjuntamos el precio para el pago del carrito
-        carrito.precio_pago = carrito.cantidad * producto.precio
+        carrito.precio_pago = carrito.cantidad * precio
 
     def registrar_compra(self, carrito: Carrito):
         """ 
@@ -103,6 +112,7 @@ class OrquestadorSaga:
         try:
             SagaBuilder \
                 .create() \
+                .action(lambda: acciones.verificar_producto_activado(carrito), lambda: acciones.nada()) \
                 .action(lambda: acciones.calcular_precio_pago(carrito), lambda: acciones.nada()) \
                 .action(lambda: acciones.registrar_compra(carrito), lambda: acciones.eliminar_compra(carrito)) \
                 .action(lambda: acciones.registrar_pago(carrito), lambda: acciones.eliminar_pago(carrito)) \
