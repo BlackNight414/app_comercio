@@ -19,7 +19,8 @@ class MsCompras:
         else:
             logging.error('Microservicio Compras ha fallado.')
             raise Exception('Microservicio Compras ha fallado.')
-        
+    
+    @retry(wait=wait_random(min=1, max=2), stop=stop_after_attempt(3))
     def eliminar_compra(self, id_compra: int, observaciones: str):
         datos_observaciones = {'observaciones': observaciones}
         resp = requests.delete(f'{self.__URL_MS}/eliminar_compra/{id_compra}', json=datos_observaciones, verify=False)

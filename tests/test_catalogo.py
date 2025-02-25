@@ -16,11 +16,6 @@ class TestMsCatalogo(unittest.TestCase):
         producto = self.ms_catalogo.get_by_id(1)
         self.assertIsInstance(producto, Producto)
 
-    def __test_get_all(self):
-        resp = self.ms_catalogo.get_all()
-        self.assertEqual(resp.status_code, 200)
-        print(resp.json())
-
     def test_producto(self):
 
         datos_producto = {

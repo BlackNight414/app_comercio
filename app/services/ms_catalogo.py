@@ -32,9 +32,3 @@ class MsCatalogo:
         logging.info(f'Se ha consultado el producto id={producto.id}')
         return producto
     
-    def get_all(self):
-        resp = requests.get(url=f'{self.__URL_MS}/get_all', verify=False)
-        if resp.status_code == 200:
-            return resp.json()
-        else:
-            raise Exception('Microservicio Catálogo ha fallado.')
