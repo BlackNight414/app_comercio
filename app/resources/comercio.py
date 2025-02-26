@@ -29,26 +29,4 @@ def comprar_producto_saga():
         resp = jsonify('PROCESO DE COMPRA HA FALLADO :('), 422
     return resp
     
-@comercio.route('/catalogo/<int:id>')
-@limiter.limit('10 per minute')
-def producto(id):
-    ms_catalogo = MsCatalogo()
-
-    try:
-        producto = ms_catalogo.get_by_id(id)
-        return producto_schema.dump(producto), 200
-    except Exception as e:
-        logging.error(e)
-        return jsonify('Microservicio Catalogo no responde.'), 200
-
-@comercio.route('/consultar_stock/<int:producto_id>')
-@limiter.limit('60 per minute')
-def consultar_stock(producto_id):
-    ms_inventario = MsInventario()
-    try:
-        stock = ms_inventario.consultar_stock(producto_id)
-        return jsonify({'stock': stock}), 200
-    except Exception as e:
-        logging.error(e)
-        return jsonify('Microservicio Inventario no responde'), 200
     
